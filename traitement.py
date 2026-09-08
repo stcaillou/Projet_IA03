@@ -32,7 +32,7 @@ buffer_to_send = b''
 
 app = Flask(__name__)
 
-#Permet de switcher entre les deux models disponibles
+# Permet de basculer entre les deux modèles disponibles
 @app.route("/change_model", methods=["GET"]) 
 def change_model(): 
     global changed
@@ -45,7 +45,7 @@ def change_model():
         model = YOLO("model/yolov8s.pt", verbose=False)
     return jsonify({ "message": model.names})
 
-#Permet de changer la classe à détecter
+# Permet de changer la classe à détecter
 @app.route("/change_class", methods=["GET"])
 def change_class():
     global model
@@ -53,21 +53,21 @@ def change_class():
     class_yolo = int(request.args.get('class'))
     return jsonify({ "message": model.names})
 
-#Permet de changer la résolution d'inférence
+# Permet de changer la résolution d'inférence
 @app.route("/change_res", methods=["GET"])
 def change_res():
     global resolution
     class_yolo = int(request.args.get('res'))
     return jsonify({ "message": "ok"})
 
-#Permet de récupérer les classes disponibles dans le model
+# Permet de récupérer les classes disponibles dans le modèle
 @app.route("/class_info", methods=["GET"])
 def class_info():
     global model
     return jsonify({ "message": model.names})
 
 
-#Permet de changer le seuil de confiance
+# Permet de changer le seuil de confiance
 @app.route("/change_conf", methods=["GET"])
 def change_conf():
     global CONFIDENCE_THRESHOLD
@@ -75,6 +75,7 @@ def change_conf():
     return jsonify({ "message": "ok"})
 
 
+# Permet d'éviter les problèmes de concurrence
 buffer_lock = threading.Lock()
 
 def generate_frames():
@@ -86,12 +87,13 @@ def generate_frames():
                        b'Content-Type: image/jpeg\r\n\r\n' + buffer_to_send + b'\r\n')
         time.sleep(0.03)
 
-
+# Permet de récupérer la caméra sous forme d'une image JPEG qui s'actualise en continu
 @app.route("/camera", methods=["GET"])
 def display_camera():
     return Response(generate_frames(),
                         mimetype='multipart/x-mixed-replace; boundary=frame')
 
+# Permet de modifier l'IP du serveur caméra
 @app.route("/set_ip", methods=["GET"])
 def set_ip():
     global HOST_IN
@@ -128,7 +130,9 @@ def start_server(host_in='localhost', port_in=2500, host_out='localhost', port_o
     threading.Thread(target=accept_clients,args=(server_socket,),daemon=True).start()
 
     try:
-        while not HAS_CHANGED:
+        while not HAS_CHANGED:  # Permet de changer la caméra
+
+            # Réception du flux vidéo -------------------------------
             data_size = struct.unpack("Q", client_socket.recv(8))[0]
             if not data_size:
                 break
@@ -143,7 +147,8 @@ def start_server(host_in='localhost', port_in=2500, host_out='localhost', port_o
             frame = cv2.imdecode(np.frombuffer(received_data, dtype=np.uint8), cv2.IMREAD_COLOR)
             if frame is None:
                     break
-            
+
+            # Détection des éléments avec le modèle ------------------
             detections = model(frame, verbose=False, classes=[class_yolo], imgsz=resolution)[0]
             
             for box in detections.boxes:
@@ -154,6 +159,7 @@ def start_server(host_in='localhost', port_in=2500, host_out='localhost', port_o
                     xmin, ymin, xmax, ymax = map(int, box.data.tolist()[0][:4])
                     cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
 
+            # Compression de l'image ----------------------------------
             success, buffer = cv2.imencode(".jpg",frame,[cv2.IMWRITE_JPEG_QUALITY, 80])
 
             if not success:
@@ -163,6 +169,7 @@ def start_server(host_in='localhost', port_in=2500, host_out='localhost', port_o
             with buffer_lock:
                     buffer_to_send = data
 
+
             message = struct.pack("Q", len(data)) + data
 
             disconnected_clients = []
@@ -170,6 +177,7 @@ def start_server(host_in='localhost', port_in=2500, host_out='localhost', port_o
             with clients_lock:
                 current_clients = clients.copy()
 
+            # Gestion des envois clients et des déconnexions ----------
             for client_socket_i in current_clients:
                 try:
                     client_socket_i.sendall(message)
@@ -209,12 +217,12 @@ def launch_app(port):
     app.run(host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Transmission vidéo via socket (Serveur/Client)")
-    parser.add_argument("--host_in", type=str, default="0.0.0.0", help="Adresse IP entrée vidéo (par défaut: localhost)")
-    parser.add_argument("--port_in", type=int, default=2500, help="Port entrée vidéo")
-    parser.add_argument("--host_out", type=str, default="0.0.0.0", help="Adresse IP sortie vidéo (par défaut : localhost)")
-    parser.add_argument("--port_out", type=int, default=2500, help="Port sortie vidéo")
-    parser.add_argument("--port_web", type=int, default=8080, help="Port serveur web")
+    parser = argparse.ArgumentParser(description="Transmission vidéo via socket (serveur/client)")
+    parser.add_argument("--host_in", type=str, default="0.0.0.0", help="Adresse IP du flux vidéo d'entrée (par défaut : 0.0.0.0)")
+    parser.add_argument("--port_in", type=int, default=2500, help="Port du flux vidéo d'entrée (par défaut : 2500)")
+    parser.add_argument("--host_out", type=str, default="0.0.0.0", help="Adresse IP du serveur de sortie du flux vidéo (par défaut : 0.0.0.0)")
+    parser.add_argument("--port_out", type=int, default=2500, help="Port du serveur de sortie du flux vidéo (par défaut : 2500)")
+    parser.add_argument("--port_web", type=int, default=8080, help="Port du serveur web de l'interface (par défaut : 8080)")
     args = parser.parse_args()
     threading.Thread(target=launch_app, args=[args.port_web],daemon=True).start()
     HOST_IN = args.host_in

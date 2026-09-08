@@ -16,8 +16,8 @@ clients_lock = threading.Lock()
 
 def accept_clients(server_socket):
     r'''
-        Cette méthode permet de rajouter les clients qui viennent de se connecter dans la liste
-        des destinataire du flux vidéo du serveur associé.
+        Cette méthode permet d'ajouter les clients qui viennent de se connecter à la liste
+        des destinataires du flux vidéo du serveur associé.
     '''
     while True:
         try:
@@ -29,15 +29,15 @@ def accept_clients(server_socket):
 
 def start_server(host='localhost', port=2500):
     r'''
-        Cette méthode permet de mettre en place un serveur socket TCP qui envoie frame par frame
-        le flux vidéo au différent client qui se connecte à lui.
+        Cette méthode permet de mettre en place un serveur socket TCP qui envoie, frame par frame,
+        le flux vidéo à chaque client qui se connecte à lui.
     '''
-    #On démarre le serveur socket
+    # On démarre le serveur socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
     server_socket.listen(5)
 
-    #On capture la vidéo de la caméra (Il est tout à fait possible de changer la source du flux vidéo)
+    # On capture la vidéo de la caméra (il est tout à fait possible de changer la source du flux vidéo)
     cap = cv.VideoCapture(0)
     if not cap.isOpened():
         sys.exit(1)
@@ -45,7 +45,7 @@ def start_server(host='localhost', port=2500):
     threading.Thread(target=accept_clients,args=(server_socket,),daemon=True).start()
 
     try:
-        #Cette boucle permet l'envoie des 'frames' capturer sur la caméra
+        # Cette boucle permet l'envoi des "frames" capturées sur la caméra
         while True:
 
             ret, frame = cap.read()
@@ -53,7 +53,7 @@ def start_server(host='localhost', port=2500):
             if not ret:
                 break
 
-            #On compresse l'image pour gagner en débit
+            # On compresse l'image pour gagner en débit
             success, buffer = cv.imencode(".jpg",frame,[cv.IMWRITE_JPEG_QUALITY, 80])
 
             if not success:
@@ -67,7 +67,7 @@ def start_server(host='localhost', port=2500):
             with clients_lock:
                 current_clients = clients.copy()
 
-            #On envoie la frame à chaque client connecter
+            # On envoie la frame à chaque client connecté
             for client_socket in current_clients:
                 try:
                     client_socket.sendall(message)
@@ -75,7 +75,7 @@ def start_server(host='localhost', port=2500):
                 except (BrokenPipeError, ConnectionResetError, OSError):
                     disconnected_clients.append(client_socket)
 
-            #On retire les clients déconnecter de la liste des destinataire
+            # On retire les clients déconnectés de la liste des destinataires
             if disconnected_clients:
                 with clients_lock:
                     for client_socket in disconnected_clients:
@@ -90,7 +90,7 @@ def start_server(host='localhost', port=2500):
 
     except KeyboardInterrupt:
         pass
-    finally:#Ici on termine la boucle de manière conventionnelle ( on ferme le serveur et on déconnecte les clients )
+    finally:  # Ici, on termine la boucle de manière conventionnelle (on ferme le serveur et on déconnecte les clients)
         cap.release()
         with clients_lock:
             for client_socket in clients:
@@ -128,7 +128,7 @@ def start_client(host='localhost', port=2500):
             if frame is None:
                 break
 
-            #Ici on affichage l'image côté client
+            # Ici, on affiche l'image côté client
             cv.imshow("", frame)
             if cv.waitKey(1) == ord('q'):
                 break
@@ -143,11 +143,11 @@ def start_client(host='localhost', port=2500):
 #------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Transmission vidéo via socket (Serveur/Client)")
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="Adresse IP (par défaut: localhost)")
-    parser.add_argument("--port", type=int, default=2500, help="Port (par défaut: 2500)")
-    parser.add_argument("--server", action="store_true", help="Mode serveur (envoi des images)")
-    parser.add_argument("--client", action="store_true", help="Mode client (réception des images)")
+    parser = argparse.ArgumentParser(description="Transmission vidéo via socket (serveur/client)")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Adresse IP du serveur ou du client (par défaut : 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=2500, help="Port du service socket (par défaut : 2500)")
+    parser.add_argument("--server", action="store_true", help="Démarre le serveur qui envoie le flux vidéo aux clients")
+    parser.add_argument("--client", action="store_true", help="Démarre le client qui reçoit le flux vidéo du serveur")
 
     args = parser.parse_args()
 

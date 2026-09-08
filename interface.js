@@ -18,7 +18,7 @@ const portITIndex = args.indexOf("--port_interface");
 const portIT = portITIndex !== -1 ? args[portITIndex + 1] : undefined;
 
 if (ip == undefined || port == undefined || portIT == undefined){
-    console.log("Mettre l'ip avec --ip et port_traitement avec --port_traitement et port_interface avec --port_interface")
+    console.log("Indiquez l'IP avec --ip, le port de traitement avec --port_traitement et le port de l'interface avec --port_interface.")
     process.exit(1);
 }
 
@@ -28,8 +28,8 @@ const PORT = portIT;
 //-----------------------------------------
 
 /*
-    Les endpoints déclaré dans se fichier font écho à ceux déclarer dans traitement.py
-    Ici on ne réalise qu'une passerelle entre deux ordinateurs, celui ayant traitement.py et celui qui dessert l'interface utilisateur
+    Les endpoints déclarés dans ce fichier font écho à ceux déclarés dans traitement.py.
+    Ici, on ne réalise qu'une passerelle entre deux ordinateurs : celui qui a traitement.py et celui qui dessert l'interface utilisateur.
 */
 
 app.use(express.urlencoded({ extended: true }));
