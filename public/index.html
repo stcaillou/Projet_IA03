@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle du modèle YOLO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <h1>Contrôle du modèle YOLO</h1>
+    <p class="subtitle">Configuration de la détection en temps réel</p>
+
+    <div class="stream">
+        <h2>Flux vidéo de la caméra</h2>
+        <img id="camera" src="/camera" class="stream">
+        <div id="message"></div>
+    </div>
+
+    <div class="form-group">
+        <label for="changeModelBtn">Modèle</label>
+        <button id="changeModelBtn" class="block">Changer de modèle</button>
+    </div>
+
+    <div class="form-group">
+        <label for="classId">Classe de détection</label>
+        <div class="row">
+            <select id="classId" disabled>
+                <option value="">Chargement des classes…</option>
+            </select>
+            <button id="changeClassBtn">Appliquer</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="resolution">Résolution d'inférence</label>
+        <div class="row">
+            <select id="resolution">
+                <option value="320" selected>320</option>
+                <option value="416">416</option>
+                <option value="512">512</option>
+                <option value="640">640</option>
+                <option value="960">960</option>
+                <option value="1280">1280</option>
+            </select>
+            <button id="changeResBtn">Appliquer</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="confidence">Seuil de confiance</label>
+        <div class="slider-row">
+            <input type="range" id="confidence" min="0" max="1" step="0.01" value="0.5">
+            <span class="slider-value" id="confidenceValue">0.50</span>
+        </div>
+        <div class="scale"><span>0</span><span>1</span></div>
+        <button id="changeConfBtn" class="block">Appliquer</button>
+    </div>
+
+    <div class="form-group">
+        <label for="confidence">Changement Camera</label>
+        <div>
+            <input type="text" placeholder="IP" id="ipEntry"></input>
+            <input type="text" placeholder="PORT" id="portEntry"></input>
+            <button id="changeCamera">Appliquer</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
