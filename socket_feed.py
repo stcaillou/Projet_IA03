@@ -27,7 +27,7 @@ def accept_clients(server_socket):
         except OSError:
             break
 
-def start_server(host='localhost', port=2500):
+def start_server(host='localhost', port=2500, camera=0):
     r'''
         Cette méthode permet de mettre en place un serveur socket TCP qui envoie, frame par frame,
         le flux vidéo à chaque client qui se connecte à lui.
@@ -38,7 +38,7 @@ def start_server(host='localhost', port=2500):
     server_socket.listen(5)
 
     # On capture la vidéo de la caméra (il est tout à fait possible de changer la source du flux vidéo)
-    cap = cv.VideoCapture(1)
+    cap = cv.VideoCapture(camera)
     if not cap.isOpened():
         sys.exit(1)
 
@@ -148,12 +148,13 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=2500, help="Port du service socket (par défaut : 2500)")
     parser.add_argument("--server", action="store_true", help="Démarre le serveur qui envoie le flux vidéo aux clients")
     parser.add_argument("--client", action="store_true", help="Démarre le client qui reçoit le flux vidéo du serveur")
+    parser.add_argument("--camera", type=int, default=0, help="Numéro de la caméra à utiliser (par défaut : 0)")
 
     args = parser.parse_args()
 
     if args.server:
-        start_server(args.host, args.port)
+        start_server(args.host, args.port, args.camera)
     elif args.client:
-        start_client(args.host, args.port)
+        start_client(args.host, args.port, args.camera)
     else:
         sys.exit(1)
