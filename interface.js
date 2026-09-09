@@ -62,14 +62,36 @@ app.post('/change-model', async (req, res) => {
 });
 
 app.post('/change-class', async (req, res) => {
-    const classId = req.body.classId;
+    const rawClassIds = req.body.classId;
+    const classIds = (Array.isArray(rawClassIds) ? rawClassIds : [rawClassIds])
+        .filter((classId) => classId !== undefined && classId !== '');
+
+    if (classIds.length === 0) {
+        return res.json({ success: false, message: "Aucune classe sélectionnée." });
+    }
+
     try {
-        const response = await axios.get(`${FLASK_URL}/change_class`, { params: { class: classId } });
-        res.json({ success: true, message: "Classe changée avec succès.", classNames: response.data.message });
+        const response = await axios.get(`${FLASK_URL}/change_class`, {
+            params: {
+                class: classIds.join(',')
+            }
+        });
+
+        res.json({
+            success: true,
+            message: "Classes changées avec succès.",
+            classNames: response.data.message,
+            selectedClasses: response.data.selected_classes
+        });
     } catch (error) {
-        res.json({ success: false, message: "Erreur lors du changement de classe." });
+        console.error(error);
+        res.json({
+            success: false,
+            message: "Erreur lors du changement de classe."
+        });
     }
 });
+
 
 app.post('/change-res', async (req, res) => {
     const resolution = req.body.resolution;

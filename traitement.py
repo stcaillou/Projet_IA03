@@ -24,7 +24,7 @@ clients_lock = threading.Lock()
 CONFIDENCE_THRESHOLD = 0.8
 
 model = YOLO("model/yolov8n.pt", verbose=False)
-class_yolo = 0
+classes_yolo = [0]
 resolution = 320
 buffer_to_send = b''
 
@@ -45,16 +45,41 @@ def change_model():
         model = YOLO("model/yolov8s.pt", verbose=False)
     return jsonify({"message": model.names})
 
-# Permet de changer la classe à détecter
+# Permet de changer les classes à détecter
 @app.route("/change_class", methods=["GET"])
 def change_class():
     global model
-    global class_yolo
+    global classes_yolo
     try:
-        class_yolo = int(request.args.get("class"))
-        if class_yolo not in model.names:
-            return jsonify({"message": "Classe inexistante", "classes": model.names}), 400
-        return jsonify({"message": model.names, "selected_class": class_yolo, "selected_name": model.names[class_yolo]})
+        # Les classes peuvent arriver soit répétées (class=0&class=2), soit séparées par des virgules (class=0,2)
+        raw_values = request.args.getlist("class")
+        if not raw_values:
+            return jsonify({"message": "Paramètre 'class' manquant"}), 400
+
+        selected = []
+        for raw_value in raw_values:
+            for part in str(raw_value).split(","):
+                part = part.strip()
+                if part == "":
+                    continue
+                class_id = int(part)
+                if class_id not in selected:
+                    selected.append(class_id)
+
+        if not selected:
+            return jsonify({"message": "Aucune classe sélectionnée", "classes": model.names}), 400
+
+        unknown = [class_id for class_id in selected if class_id not in model.names]
+        if unknown:
+            return jsonify({"message": "Classe inexistante", "unknown": unknown, "classes": model.names}), 400
+
+        classes_yolo = selected
+        print(classes_yolo)
+        return jsonify({
+            "message": model.names,
+            "selected_classes": classes_yolo,
+            "selected_names": [model.names[class_id] for class_id in classes_yolo],
+        })
     except (TypeError, ValueError):
         return jsonify({"message": "Paramètre 'class' invalide"}), 400
 
@@ -185,7 +210,7 @@ def start_server(host_in='localhost', port_in=2500, host_out='localhost', port_o
                 break
 
             # Détection des éléments avec le modèle ------------------
-            detections = model(frame, verbose=False, classes=[class_yolo], imgsz=resolution)[0]
+            detections = model(frame, verbose=False, classes=list(classes_yolo), imgsz=resolution)[0]
             object_count = 0
 
             for box in detections.boxes:

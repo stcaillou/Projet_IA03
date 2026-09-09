@@ -86,6 +86,44 @@
       border-color: var(--black);
   }
 
+  /* Liste à puces des classes de détection */
+  .class-list {
+      margin: 0 0 12px;
+      padding: 10px 12px 10px 30px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: var(--white);
+      border: 1px solid var(--grey-300);
+      border-radius: 2px;
+      font-size: 14px;
+  }
+
+  .class-list li {
+      padding: 2px 0;
+  }
+
+  .class-list label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      cursor: pointer;
+  }
+
+  .class-list input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+  }
+
+  .class-list-empty {
+      color: var(--grey-500);
+      list-style: none;
+      margin-left: -18px;
+  }
+
   select:disabled {
       color: var(--grey-500);
       cursor: default;
@@ -244,4 +282,8 @@
   input[type="text"]:disabled {
       color: var(--grey-500);
       cursor: default;
+  }
+
+  li{
+    list-style-type: none;
   }

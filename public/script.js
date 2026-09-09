@@ -22,25 +22,54 @@ async function post(url, body) {
     }
 }
 
-const classSelect = document.getElementById('classId');
+const classList = document.getElementById('classList');
+
+// Classes cochées au premier chargement (0 = person, valeur par défaut côté traitement.py)
+const DEFAULT_CLASS_IDS = ['0'];
+let classListInitialised = false;
+
+// Retourne les identifiants des classes cochées
+function getSelectedClasses() {
+    return Array.from(classList.querySelectorAll('input[type="checkbox"]:checked'))
+        .map((checkbox) => checkbox.value);
+}
+
+function showClassListMessage(text) {
+    classList.innerHTML = '';
+    const item = document.createElement('li');
+    item.className = 'class-list-empty';
+    item.textContent = text;
+    classList.appendChild(item);
+}
 
 function populateClasses(classNames) {
     if (!classNames) return;
-    const previous = classSelect.value;
+    // Au premier rendu, on coche les classes détectées par défaut par le modèle
+    const selected = classListInitialised ? getSelectedClasses() : DEFAULT_CLASS_IDS;
     const entries = Object.entries(classNames)
         .sort((a, b) => Number(a[0]) - Number(b[0]));
 
-    classSelect.innerHTML = '';
+    if (entries.length === 0) {
+        showClassListMessage("Aucune classe disponible");
+        return;
+    }
+
+    classList.innerHTML = '';
     for (const [id, name] of entries) {
-        const option = document.createElement('option');
-        option.value = id;
-        option.textContent = name;
-        classSelect.appendChild(option);
+        const item = document.createElement('li');
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+
+        checkbox.type = 'checkbox';
+        checkbox.value = id;
+        checkbox.checked = selected.includes(id);
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(`${name} (${id})`));
+        item.appendChild(label);
+        classList.appendChild(item);
     }
-    classSelect.disabled = entries.length === 0;
-    if (previous && classSelect.querySelector(`option[value="${previous}"]`)) {
-        classSelect.value = previous;
-    }
+    classListInitialised = true;
 }
 
 async function loadClasses() {
@@ -50,11 +79,11 @@ async function loadClasses() {
         if (data.success) {
             populateClasses(data.classNames);
         } else {
-            classSelect.innerHTML = '<option value="">Classes indisponibles</option>';
+            showClassListMessage("Classes indisponibles");
             showMessage(data.message, false);
         }
     } catch (error) {
-        classSelect.innerHTML = '<option value="">Classes indisponibles</option>';
+        showClassListMessage("Classes indisponibles");
         showMessage("Erreur lors de la récupération des classes.", false);
     }
 }
@@ -77,12 +106,16 @@ document.getElementById('changeModelBtn').addEventListener('click', async () => 
 });
 
 document.getElementById('changeClassBtn').addEventListener('click', async () => {
-    const classId = classSelect.value;
-    if (!classId) {
-        showMessage("Veuillez sélectionner une classe.", false);
+    const classIds = getSelectedClasses();
+
+    if (classIds.length === 0) {
+        showMessage("Veuillez sélectionner au moins une classe.", false);
         return;
     }
-    const data = await post('/change-class', `classId=${encodeURIComponent(classId)}`);
+    const body = classIds
+        .map((classId) => `classId=${encodeURIComponent(classId)}`)
+        .join('&');
+    const data = await post('/change-class', body);
     if (data && data.success) populateClasses(data.classNames);
 });
 
