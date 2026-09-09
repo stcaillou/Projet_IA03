@@ -100,13 +100,13 @@ Ce script lance un serveur web permettant :
 Mode serveur :
 
 ```bash
-python socket_feed.py --host 0.0.0.0 --port 2500 --server
+python socket_feed.py --host 0.0.0.0 --port 2500 --server --camera 0
 ```
 
 Mode client :
 
 ```bash
-python socket_feed.py --host 0.0.0.0 --port 2500 --client
+python socket_feed.py --host 0.0.0.0 --port 2500 --client --camera 0
 ```
 
 ### Démarrer le traitement
