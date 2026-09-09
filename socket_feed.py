@@ -38,7 +38,7 @@ def start_server(host='localhost', port=2500):
     server_socket.listen(5)
 
     # On capture la vidéo de la caméra (il est tout à fait possible de changer la source du flux vidéo)
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(1)
     if not cap.isOpened():
         sys.exit(1)
 

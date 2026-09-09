@@ -34,6 +34,12 @@ node -v
 npm -v
 ```
 
+puis 
+
+```bash
+npm install
+```
+
 ## Structure du projet
 
 ```text
@@ -106,7 +112,7 @@ python socket_feed.py --host 0.0.0.0 --port 2500 --client
 ### Démarrer le traitement
 
 ```bash
-python traitement.py --host_in 0.0.0.0 --port_in 2500 --host_out 0.0.0.0 --port_out 2500 --port_web 8080
+python traitement.py --host_in 0.0.0.0 --port_in 2500 --host_out 0.0.0.0 --port_out 2501 --port_web 8080
 ```
 
 ### Démarrer l’interface web
