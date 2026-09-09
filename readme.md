@@ -87,7 +87,7 @@ Ce script lance un serveur web permettant :
 
 ## Lancement
 
-Dans cette ordre
+*Dans cette ordre, il est à la discrétion de l'utilisateur d'adapter les arguments*
 
 ### Démarrer le flux socket
 
@@ -137,4 +137,4 @@ Le programme peut basculer entre ces deux modèles selon les réglages de l’in
 
 ## Auteur
 
-Projet IA03.
+G.Genevois, D.Ezhova, N.Coiffin, P.Ribet
